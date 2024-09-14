@@ -1,7 +1,8 @@
 import wikipedia
 from langchain_community.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage
+import re
 
 
 
@@ -40,23 +41,28 @@ def langchain_agent():
     prompt_template = ChatPromptTemplate.from_messages(
         [
             ("system", "You are a helpful assistant capable of retrieving information and solving mathematical problems."),
-            ("user", "{query}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad")
+            ("user", "{query}")
         ]
     )
 
     # Create the initial human query
-    query = "What is the average age of a dog? Multiply the age by 3."
+    query = "What is the average age of a football player? Multiply the age by 3."
     human_message = HumanMessage(query)
 
-    # LLM generates the initial response
-    llm_response = llm.invoke(query)
 
-    # Process the tool call based on the LLM response
-    if "wikipedia" in query.lower():
-        tool_output = tools["wikipedia"](query)
-    elif "multiply" in query.lower():
-        tool_output = tools["llm-math"]("7 * 3")  # Assuming age is 7 years as an example
+    # Use the prompt template to format the initial message
+    formatted_prompt = prompt_template.format_prompt(query=human_message)
+
+    # LLM generates the initial response
+    llm_response = llm.invoke(formatted_prompt)
+
+    # Extract the calculation part from the LLM response
+    calculation = re.search(r'(\d+(\.\d+)?) \× \d+', llm_response)
+    if calculation:
+        equation = f"{calculation.group(1)} * 3"  # Build the calculation equation
+        tool_output = tools["llm-math"](equation)
+    else:
+        tool_output = "No calculation found in LLM response."
 
     # Append tool output to the conversation and print the final result
     final_response = f"LLM Response: {llm_response}\nTool Output: {tool_output}"
