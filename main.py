@@ -38,7 +38,7 @@ with st.sidebar:
             max_chars=50,
             key="query"
             )
-        "[View the source code](https://github.com/rishabkumar7/pets-name-langchain/tree/main)"
+        "[View the source code](https://github.com/Baronchibuikem/learning-langchain-ollama/)"
         submit_button = st.form_submit_button(label='Submit')
 
 if query and youtube_url:
