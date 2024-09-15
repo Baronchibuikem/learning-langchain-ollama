@@ -56,18 +56,27 @@ def langchain_agent():
     # LLM generates the initial response
     llm_response = llm.invoke(formatted_prompt)
 
-    # Extract the calculation part from the LLM response
-    calculation = re.search(r'(\d+(\.\d+)?) \× \d+', llm_response)
-    if calculation:
-        equation = f"{calculation.group(1)} * 3"  # Build the calculation equation
-        tool_output = tools["llm-math"](equation)
+    # Decide which tool to use based on the LLM response
+    if "average age" in query.lower():
+        # Use the Wikipedia tool to get a summary related to the query
+        summary = tools["wikipedia"](query)
+        print(f"Wikipedia Summary: {summary}")
+        
+        # Extract the calculation part from the LLM response
+        calculation = re.search(r'(\d+(\.\d+)?) \× \d+', llm_response)
+        if calculation:
+            equation = f"{calculation.group(1)} * 3"  # Build the calculation equation
+            tool_output = tools["llm-math"](equation)
+        else:
+            tool_output = "No calculation found in LLM response."
+
+        # Print the LLM response and tool output
+        final_response = f"LLM Response: {llm_response}\nTool Output: {tool_output}"
     else:
-        tool_output = "No calculation found in LLM response."
+        # If the query does not involve average age, use the LLM response directly
+        final_response = f"LLM Response: {llm_response}"
 
-    # Append tool output to the conversation and print the final result
-    final_response = f"LLM Response: {llm_response}\nTool Output: {tool_output}"
     print(final_response)
-
 
 if __name__ == "__main__":
     langchain_agent()
